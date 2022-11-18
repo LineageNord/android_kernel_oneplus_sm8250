@@ -273,4 +273,8 @@ enum qg_mode {
 	QG_V_MODE,
 };
 
+#ifdef CONFIG_OPLUS_QPNP_QG_ADAPTER
+int qg_oplus_init(struct qpnp_qg *chip);
+#endif
+
 #endif /* __QG_CORE_H__ */

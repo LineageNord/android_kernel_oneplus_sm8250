@@ -257,6 +257,12 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 	if (!chip->profile_loaded)
 		return;
 
+#ifdef CONFIG_OPLUS_QPNP_QG_ADAPTER
+	/* The Oplus charger applies the temperature-dependent float voltage. */
+	if (of_property_read_bool(chip->dev->of_node, "qcom,pm7250b-qg-feture"))
+		goto notify_current;
+#endif
+
 	prop.intval = chip->bp.float_volt_uv;
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_VOLTAGE_MAX, &prop);
@@ -266,6 +272,9 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 		return;
 	}
 
+#ifdef CONFIG_OPLUS_QPNP_QG_ADAPTER
+notify_current:
+#endif
 	prop.intval = chip->bp.fastchg_curr_ma * 1000;
 	rc = power_supply_set_property(chip->batt_psy,
 			POWER_SUPPLY_PROP_CONSTANT_CHARGE_CURRENT_MAX, &prop);
@@ -283,6 +292,10 @@ static void qg_notify_charger(struct qpnp_qg *chip)
 		pr_err("Failed to get charge term current, rc=%d\n", rc);
 		return;
 	}
+#ifdef CONFIG_OPLUS_QPNP_QG_ADAPTER
+	/* The LITO charger exports uA; the QG time-to-full algorithm uses mA. */
+	prop.intval /= 1000;
+#endif
 	chip->chg_iterm_ma = prop.intval;
 }
 
@@ -4886,6 +4899,14 @@ static int qpnp_qg_probe(struct platform_device *pdev)
 		pr_err("Failed to create sysfs files rc=%d\n", rc);
 		goto fail_votable;
 	}
+
+#ifdef CONFIG_OPLUS_QPNP_QG_ADAPTER
+	if (of_property_read_bool(chip->dev->of_node, "qcom,pm7250b-qg-feture")) {
+		rc = qg_oplus_init(chip);
+		if (rc < 0)
+			goto fail_votable;
+	}
+#endif
 
 	qg_get_battery_capacity(chip, &soc);
 

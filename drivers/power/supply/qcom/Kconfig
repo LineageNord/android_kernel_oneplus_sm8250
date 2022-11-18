@@ -176,3 +176,10 @@ config SMB1398_CHARGER
 	      chargers.
 
 endmenu
+
+config OPLUS_QPNP_QG_ADAPTER
+	bool "Oplus charging interface for the Qualcomm QG"
+	depends on QPNP_QG=y && ARCH_LITO && OPLUS_SM7250R_CHARGER=y
+	help
+	  Expose the maintained Qualcomm QG measurements to the Oplus charger
+	  on devices using an internal gauge, such as the OnePlus Nord CE.

@@ -49,3 +49,11 @@ endif
 if TOUCHPANEL_SYNAPTICS
 source "drivers/input/touchscreen/oplus_touchscreen/Synaptics/Kconfig"
 endif
+
+config TOUCHPANEL_FOCAL
+	bool "OPLUS Focaltech touchscreens"
+	depends on TOUCHPANEL_OPLUS
+
+if TOUCHPANEL_FOCAL
+source "drivers/input/touchscreen/oplus_touchscreen/Focal/Kconfig"
+endif

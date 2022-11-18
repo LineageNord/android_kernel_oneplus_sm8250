@@ -2959,6 +2959,11 @@ int smblib_vbus_regulator_enable(struct regulator_dev *rdev)
 #endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 	smblib_dbg(chg, PR_OTG, "enabling OTG\n");
+
+#ifdef CONFIG_ARCH_LITO
+	if (g_oplus_chip && g_oplus_chip->internal_gauge_with_asic)
+		vooc_enable_cp_for_otg(1);
+#endif
 	oplus_wake_up_usbtemp_thread();
 
 #ifdef OPLUS_FEATURE_CHG_BASIC //Fanhong.Kong@ProDrv.CHG,add 2018/06/02 for SVOOC OTG
@@ -3017,6 +3022,11 @@ int smblib_vbus_regulator_disable(struct regulator_dev *rdev)
 #endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 	smblib_dbg(chg, PR_OTG, "disabling OTG\n");
+
+#ifdef CONFIG_ARCH_LITO
+	if (g_oplus_chip && g_oplus_chip->internal_gauge_with_asic)
+		vooc_enable_cp_for_otg(0);
+#endif
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
 	if (g_oplus_chip)
@@ -16543,6 +16553,13 @@ static int smb5_probe(struct platform_device *pdev)
 #endif
 
 #ifdef OPLUS_FEATURE_CHG_BASIC
+#ifdef CONFIG_ARCH_LITO
+	if (of_property_read_bool(chg->dev->of_node, "qcom,usbtemp_parameter_20813")) {
+		oplus_chip->con_volt = con_volt_20813;
+		oplus_chip->con_temp = con_temp_20813;
+		oplus_chip->len_array = ARRAY_SIZE(con_temp_20813);
+	} else {
+#endif
 #ifdef OPLUS_CUSTOM_OP_DEF
 	oplus_chip->con_volt = con_volt_30k;
 	oplus_chip->con_temp = con_temp_30k;
@@ -16551,6 +16568,9 @@ static int smb5_probe(struct platform_device *pdev)
 	oplus_chip->con_volt = con_volt_855;
 	oplus_chip->con_temp = con_temp_855;
 	oplus_chip->len_array = ARRAY_SIZE(con_temp_855);
+#endif
+#ifdef CONFIG_ARCH_LITO
+	}
 #endif
 	if (oplus_usbtemp_check_is_support() == true)
 		oplus_usbtemp_thread_init();
