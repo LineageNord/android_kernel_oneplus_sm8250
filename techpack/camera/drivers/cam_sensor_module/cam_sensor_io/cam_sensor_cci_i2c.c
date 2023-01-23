@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
- * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  */
 
 #include "cam_sensor_cmn_header.h"
 #include "cam_sensor_i2c.h"
 #include "cam_cci_dev.h"
-#include "cam_cci_api.h"
 
 int32_t cam_cci_i2c_read(struct cam_sensor_cci_client *cci_client,
 	uint32_t addr, uint32_t *data,
@@ -31,8 +29,8 @@ int32_t cam_cci_i2c_read(struct cam_sensor_cci_client *cci_client,
 	cci_ctrl.cfg.cci_i2c_read_cfg.data_type = data_type;
 	cci_ctrl.cfg.cci_i2c_read_cfg.data = buf;
 	cci_ctrl.cfg.cci_i2c_read_cfg.num_byte = data_type;
-	rc = cam_cci_client_ops(cci_client->cci_subdev, VIDIOC_MSM_CCI_CFG,
-		&cci_ctrl);
+	rc = v4l2_subdev_call(cci_client->cci_subdev,
+		core, ioctl, VIDIOC_MSM_CCI_CFG, &cci_ctrl);
 	if (rc < 0) {
 		CAM_ERR(CAM_SENSOR, "rc = %d", rc);
 		return rc;
@@ -83,21 +81,14 @@ int32_t cam_camera_cci_i2c_read_seq(struct cam_sensor_cci_client *cci_client,
 	cci_ctrl.cfg.cci_i2c_read_cfg.data = buf;
 	cci_ctrl.cfg.cci_i2c_read_cfg.num_byte = num_byte;
 	cci_ctrl.status = -EFAULT;
-
-	rc = cam_cci_client_ops(cci_client->cci_subdev, VIDIOC_MSM_CCI_CFG,
-		&cci_ctrl);
-	if (rc < 0) {
-		CAM_ERR(CAM_SENSOR, "CCI config failed rc = %d", rc);
-		goto end;
-	}
+	rc = v4l2_subdev_call(cci_client->cci_subdev,
+		core, ioctl, VIDIOC_MSM_CCI_CFG, &cci_ctrl);
 	rc = cci_ctrl.status;
 	CAM_DBG(CAM_SENSOR, "addr = 0x%x, rc = %d", addr, rc);
 	for (i = 0; i < num_byte; i++) {
 		data[i] = buf[i];
 		CAM_DBG(CAM_SENSOR, "Byte %d: Data: 0x%x\n", i, data[i]);
 	}
-
-end:
 	kfree(buf);
 	return rc;
 }
@@ -105,8 +96,7 @@ end:
 static int32_t cam_cci_i2c_write_table_cmd(
 	struct camera_io_master *client,
 	struct cam_sensor_i2c_reg_setting *write_setting,
-	enum cam_cci_cmd_type cmd,
-	bool force_low_priority)
+	enum cam_cci_cmd_type cmd)
 {
 	int32_t rc = -EINVAL;
 	struct cam_cci_ctrl cci_ctrl;
@@ -127,9 +117,8 @@ static int32_t cam_cci_i2c_write_table_cmd(
 	cci_ctrl.cfg.cci_i2c_write_cfg.data_type = write_setting->data_type;
 	cci_ctrl.cfg.cci_i2c_write_cfg.addr_type = write_setting->addr_type;
 	cci_ctrl.cfg.cci_i2c_write_cfg.size = write_setting->size;
-	cci_ctrl.force_low_priority = force_low_priority;
-	rc = cam_cci_client_ops(client->cci_client->cci_subdev, VIDIOC_MSM_CCI_CFG,
-		&cci_ctrl);
+	rc = v4l2_subdev_call(client->cci_client->cci_subdev,
+		core, ioctl, VIDIOC_MSM_CCI_CFG, &cci_ctrl);
 	if (rc < 0) {
 		CAM_ERR(CAM_SENSOR, "Failed rc = %d", rc);
 		return rc;
@@ -147,27 +136,25 @@ static int32_t cam_cci_i2c_write_table_cmd(
 
 int32_t cam_cci_i2c_write_table(
 	struct camera_io_master *client,
-	struct cam_sensor_i2c_reg_setting *write_setting,
-	bool force_low_priority)
+	struct cam_sensor_i2c_reg_setting *write_setting)
 {
 	return cam_cci_i2c_write_table_cmd(client, write_setting,
-		MSM_CCI_I2C_WRITE, force_low_priority);
+		MSM_CCI_I2C_WRITE);
 }
 
 int32_t cam_cci_i2c_write_continuous_table(
 	struct camera_io_master *client,
 	struct cam_sensor_i2c_reg_setting *write_setting,
-	uint8_t cam_sensor_i2c_write_flag,
-	bool force_low_priority)
+	uint8_t cam_sensor_i2c_write_flag)
 {
 	int32_t rc = 0;
 
 	if (cam_sensor_i2c_write_flag == 1)
 		rc = cam_cci_i2c_write_table_cmd(client, write_setting,
-			MSM_CCI_I2C_WRITE_BURST, force_low_priority);
+			MSM_CCI_I2C_WRITE_BURST);
 	else if (cam_sensor_i2c_write_flag == 0)
 		rc = cam_cci_i2c_write_table_cmd(client, write_setting,
-			MSM_CCI_I2C_WRITE_SEQ, force_low_priority);
+			MSM_CCI_I2C_WRITE_SEQ);
 
 	return rc;
 }
@@ -235,8 +222,8 @@ int32_t cam_sensor_cci_i2c_util(struct cam_sensor_cci_client *cci_client,
 
 	cci_ctrl.cmd = cci_cmd;
 	cci_ctrl.cci_info = cci_client;
-	rc = cam_cci_client_ops(cci_client->cci_subdev, VIDIOC_MSM_CCI_CFG,
-		&cci_ctrl);
+	rc = v4l2_subdev_call(cci_client->cci_subdev,
+		core, ioctl, VIDIOC_MSM_CCI_CFG, &cci_ctrl);
 	if (rc < 0) {
 		CAM_ERR(CAM_SENSOR, "Failed rc = %d", rc);
 		return rc;
