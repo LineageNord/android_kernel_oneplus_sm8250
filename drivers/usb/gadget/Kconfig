@@ -541,6 +541,14 @@ config USB_CONFIGFS_F_UVC
 	  device. It provides a userspace API to process UVC control requests
 	  and stream video data to the host.
 
+config USB_CONFIGFS_F_UVC_NEW
+	bool "Use the UVC function from android13-5.10"
+	depends on USB_CONFIGFS_F_UVC
+	select VIDEOBUF2_DMA_SG
+	help
+	  Build the Webcam function from android13-5.10 instead of the
+	  legacy one. It is required by DeviceAsWebcam.
+
 config USB_CONFIGFS_F_PRINTER
 	bool "Printer function"
 	select USB_F_PRINTER
