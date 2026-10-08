@@ -553,6 +553,13 @@ static int cam_cpastop_poweron(struct cam_hw_info *cpas_hw)
 	cpas_core = (struct cam_cpas *) cpas_hw->core_info;
 	soc_info = &cpas_hw->soc_info;
 	reg_base_index = cpas_core->regbase_index[CAM_CPAS_REG_CAMNOC];
+
+#ifdef CONFIG_ARCH_LITO
+	/* The QoS overrides below are only valid for Titan 480 */
+	if (soc_info->hw_version != CAM_CPAS_TITAN_480_V100)
+		return 0;
+#endif
+
 	/* Update the ipe_0_rd_qosgen_MainCtl_Low  */
 	cam_io_w_mb(0x2, soc_info->reg_map[reg_base_index].mem_base +
 		0x2208);
