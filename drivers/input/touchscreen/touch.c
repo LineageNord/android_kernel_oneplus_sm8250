@@ -104,6 +104,12 @@ int tp_util_get_vendor(struct hw_resource *hw_res,
 				strlen(panel_data->manufacture_info.version),
 			g_tp_ext_prj_name, 7);
 	}
+#ifdef CONFIG_ARCH_LITO
+	if (prj_id == 20801) {
+		memcpy(panel_data->manufacture_info.version, "0x504000000", 11);
+		panel_data->manufacture_info.version[11] = '\0';
+	}
+#endif
 	if (panel_data->tp_type == TP_UNKNOWN) {
 		pr_err("[TP]%s type is unknown\n", __func__);
 		return 0;
