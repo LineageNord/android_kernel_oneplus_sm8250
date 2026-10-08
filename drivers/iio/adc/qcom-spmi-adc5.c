@@ -949,8 +949,13 @@ static const struct adc_channels adc_chans_pmic5[ADC_MAX_CHANNEL] = {
 					SCALE_HW_CALIB_THERM_100K_PULLUP)
 	[ADC_AMUX_THM2_PU2]	= ADC_CHAN_TEMP("amux_thm2_pu2", 1,
 					SCALE_HW_CALIB_THERM_100K_PULLUP)
+#ifdef CONFIG_OPLUS_SM7250R_CHARGER
+	[ADC_AMUX_THM3_PU2]	= ADC_CHAN_TEMP("amux_thm3_pu2", 1,
+					SCALE_HW_CALIB_DEFAULT)
+#else
 	[ADC_AMUX_THM3_PU2]	= ADC_CHAN_TEMP("amux_thm3_pu2", 1,
 					SCALE_HW_CALIB_THERM_100K_PULLUP)
+#endif
 #ifdef OPLUS_FEATURE_CHG_BASIC
 	[ADC_AMUX_THM4_PU2]	= ADC_CHAN_VOLT("amux_thm4_pu2", 1,
 					SCALE_HW_CALIB_DEFAULT)
@@ -988,8 +993,13 @@ static const struct adc_channels adc_chans_pmic5[ADC_MAX_CHANNEL] = {
 					SCALE_HW_CALIB_DEFAULT)
 	[ADC_GPIO3_DIV3]	= ADC_CHAN_VOLT("gpio7_div3", 1,
 					SCALE_HW_CALIB_DEFAULT)
+#ifdef CONFIG_OPLUS_SM7250R_CHARGER
+	[ADC_GPIO4_PU2]		= ADC_CHAN_TEMP("gpio4_pu2", 1,
+					SCALE_HW_CALIB_THERM_100K_PULLUP)
+#else
 	[ADC_GPIO4_PU2]		= ADC_CHAN_VOLT("gpio8_v", 1,
 					SCALE_HW_CALIB_DEFAULT)
+#endif
 	/* yangmingjin,2020/3/9, add for usbtemp_adc */
 	[ADC_GPIO4]		= ADC_CHAN_VOLT("gpio8_vol", 1,
 					SCALE_HW_CALIB_DEFAULT)
@@ -999,10 +1009,17 @@ static const struct adc_channels adc_chans_pmic5[ADC_MAX_CHANNEL] = {
 #endif
 #ifdef OPLUS_FEATURE_CHG_BASIC
 #ifdef OPLUS_CUSTOM_OP_DEF
+#ifdef CONFIG_ARCH_LITO
+	[ADC_GPIO1_PU1]		= ADC_CHAN_VOLT("usb_temp_l", 1,
+					SCALE_HW_CALIB_DEFAULT)
+	[ADC_GPIO2_PU1]		= ADC_CHAN_VOLT("usb_temp_r", 1,
+					SCALE_HW_CALIB_DEFAULT)
+#else
 	[ADC_AMUX_THM4_PU1]	= ADC_CHAN_VOLT("usb_temp_adc", 1,
 					SCALE_HW_CALIB_DEFAULT)
 	[ADC_GPIO4_PU1]		= ADC_CHAN_VOLT("usb_supplementary_temp_adc", 1,
 					SCALE_HW_CALIB_DEFAULT)
+#endif // CONFIG_ARCH_LITO
 #endif // OPLUS_CUSTOM_OP_DEF
 #endif // OPLUS_FEATURE_CHG_BASIC
 #ifdef OPLUS_FEATURE_CHG_BASIC
