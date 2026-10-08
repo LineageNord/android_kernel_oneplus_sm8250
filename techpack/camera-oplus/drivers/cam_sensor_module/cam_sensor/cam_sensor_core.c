@@ -13,6 +13,8 @@
 #include "cam_packet_util.h"
 #ifdef CONFIG_OEM_BOOT_MODE
 #include <linux/oem/boot_mode.h>
+#elif defined(CONFIG_ARCH_LITO) && defined(CONFIG_OPLUS_FEATURE_PROJECTINFO)
+#include <soc/oplus/system/boot_mode.h>
 #endif
 #ifdef CONFIG_PROJECT_INFO
 #include <linux/oem/project_info.h>
@@ -1048,7 +1050,8 @@ int cam_sensor_match_id(struct cam_sensor_ctrl_t *s_ctrl)
 
 	slave_info = &(s_ctrl->sensordata->slave_info);
 
-#ifdef CONFIG_OEM_BOOT_MODE
+#if defined(CONFIG_OEM_BOOT_MODE) || \
+	(defined(CONFIG_ARCH_LITO) && defined(CONFIG_OPLUS_FEATURE_PROJECTINFO))
 	hb_id = get_hw_board_version();
 #endif
 	if (!slave_info) {
