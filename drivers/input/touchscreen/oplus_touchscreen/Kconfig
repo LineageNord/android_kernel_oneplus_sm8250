@@ -23,6 +23,11 @@ config OPLUS_TP_APK
 	help
 	  Say Y here if you use apk for TP.
 
+config TOUCHPANEL_GOODIX
+	bool "TP Goodix_IC enable or not for OPLUS"
+	help
+	  say Y to enable driver for Touchpanel using Goodix_IC
+
 config TOUCHPANEL_SAMSUNG
 	bool "TP samsung IC enable or not for OPLUS"
 	---help---
@@ -32,6 +37,10 @@ config TOUCHPANEL_SYNAPTICS
 	bool "TP Synaptics_IC enable or not for OPLUS"
 	help
 	  say Y to enable driver for Touchpanel using Synaptics_IC
+
+if TOUCHPANEL_GOODIX
+source "drivers/input/touchscreen/oplus_touchscreen/Goodix/Kconfig"
+endif
 
 if TOUCHPANEL_SAMSUNG
 source "drivers/input/touchscreen/oplus_touchscreen/Samsung/Kconfig"
