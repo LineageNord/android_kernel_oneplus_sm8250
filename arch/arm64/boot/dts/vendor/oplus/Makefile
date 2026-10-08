@@ -5,10 +5,15 @@ ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
         kona-kebab-overlay.dtbo \
         kona-lemonades-overlay.dtbo
 
+    dtbo-$(CONFIG_ARCH_LITO) += \
+        lito-avicii-overlay.dtbo
+
     kona-instantnoodle-overlay.dtbo-base := kona.dtb kona-v2.dtb kona-v2.1.dtb
     kona-instantnoodlep-overlay.dtbo-base := kona.dtb kona-v2.dtb kona-v2.1.dtb
     kona-kebab-overlay.dtbo-base := kona.dtb kona-v2.dtb kona-v2.1.dtb
     kona-lemonades-overlay.dtbo-base := kona.dtb kona-v2.dtb kona-v2.1.dtb
+
+    lito-avicii-overlay.dtbo-base := lito.dtb
 endif
 
 always		:= $(dtb-y)
