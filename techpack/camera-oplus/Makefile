@@ -7,9 +7,18 @@ ifeq ($(CONFIG_ARCH_KONA), y)
 include $(srctree)/techpack/camera-oplus/config/konacamera.conf
 endif
 
+ifeq ($(CONFIG_ARCH_LITO), y)
+include $(srctree)/techpack/camera-oplus/config/litocamera.conf
+endif
+
 ifeq ($(CONFIG_ARCH_KONA), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera-oplus/config/konacameraconf.h
+endif
+
+ifeq ($(CONFIG_ARCH_LITO), y)
+LINUXINCLUDE    += \
+		-include $(srctree)/techpack/camera-oplus/config/litocameraconf.h
 endif
 
 ifdef CONFIG_SPECTRA_CAMERA
