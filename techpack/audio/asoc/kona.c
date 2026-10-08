@@ -331,7 +331,11 @@ static struct afe_clk_set mi2s_clk[MI2S_MAX] = {
 static struct afe_clk_set mi2s_mclk[MI2S_MAX] = {
 	{
 		AFE_API_VERSION_I2S_CONFIG,
+#ifdef OPLUS_FEATURE_PLATFORM_LITO
+		Q6AFE_LPASS_CLK_ID_MCLK_3,
+#else
 		Q6AFE_LPASS_CLK_ID_MCLK_1,
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 		Q6AFE_LPASS_OSR_CLK_9_P600_MHZ,
 		Q6AFE_LPASS_CLK_ATTRIBUTE_COUPLE_NO,
 		Q6AFE_LPASS_CLK_ROOT_DEFAULT,
@@ -5456,8 +5460,13 @@ static int msm_mi2s_snd_startup(struct snd_pcm_substream *substream)
 		}
 
 #ifdef OPLUS_ARCH_EXTENDS
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 		if ((!mi2s_intf_conf[index].msm_is_mi2s_master) &&
 		    (index == PRIM_MI2S)) {
+#else
+		if ((!mi2s_intf_conf[index].msm_is_mi2s_master) &&
+		    (index == SEC_MI2S)) {
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 			ret = snd_soc_dai_set_fmt(rtd->codec_dai,
 						  fmt | SND_SOC_DAIFMT_I2S);
 			if (ret < 0) {
@@ -5733,7 +5742,9 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 			if (ret < 0) {
 				pr_err("%s: gpio set cannot be activated %sd",
 					__func__, "dmic_gpio");
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 				return ret;
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 			}
 		}
 
@@ -5746,7 +5757,9 @@ static int msm_dmic_event(struct snd_soc_dapm_widget *w,
 			if (ret < 0) {
 				pr_err("%s: gpio set cannot be de-activated %sd",
 					__func__, "dmic_gpio");
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 				return ret;
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 			}
 		}
 		break;
@@ -6814,6 +6827,7 @@ static struct snd_soc_dai_link msm_common_be_dai_links[] = {
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1,
 	},
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 	/* Proxy Tx BACK END DAI Link */
 	{
 		.name = LPASS_BE_PROXY_TX,
@@ -6841,6 +6855,7 @@ static struct snd_soc_dai_link msm_common_be_dai_links[] = {
 		.ignore_pmdown_time = 1,
 		.ignore_suspend = 1,
 	},
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 	{
 		.name = LPASS_BE_USB_AUDIO_RX,
 		.stream_name = "USB Audio Playback",
@@ -7539,7 +7554,9 @@ static struct snd_soc_dai_link msm_wsa_cdc_dma_be_dai_links[] = {
 		.codec_dai_name = "wsa_macro_rx1",
 		.no_pcm = 1,
 		.dpcm_playback = 1,
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 		.init = &msm_int_audrx_init,
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 		.id = MSM_BACKEND_DAI_WSA_CDC_DMA_RX_0,
 		.be_hw_params_fixup = msm_be_hw_params_fixup,
 		.ignore_pmdown_time = 1,
@@ -7684,6 +7701,9 @@ static struct snd_soc_dai_link msm_va_cdc_dma_be_dai_links[] = {
 		.codec_dai_name = "va_macro_tx1",
 		.no_pcm = 1,
 		.dpcm_capture = 1,
+#ifdef OPLUS_FEATURE_PLATFORM_LITO
+		.init = &msm_int_audrx_init,
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 		.id = MSM_BACKEND_DAI_VA_CDC_DMA_TX_0,
 		.be_hw_params_fixup = msm_be_hw_params_fixup,
 		.ignore_suspend = 1,
@@ -7954,6 +7974,9 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 	u32 auxpcm_audio_intf = 0;
 	u32 val = 0;
 	u32 wcn_btfm_intf = 0;
+#ifdef OPLUS_FEATURE_PLATFORM_LITO
+	u32 wsa_bolero_codec = 0;
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 	const struct of_device_id *match;
 
 	match = of_match_node(kona_asoc_machine_of_match, dev->of_node);
@@ -7971,11 +7994,25 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 		       sizeof(msm_common_dai_links));
 		total_links += ARRAY_SIZE(msm_common_dai_links);
 
+#ifndef OPLUS_FEATURE_PLATFORM_LITO
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_bolero_fe_dai_links,
 		       sizeof(msm_bolero_fe_dai_links));
 		total_links +=
 			ARRAY_SIZE(msm_bolero_fe_dai_links);
+#else
+		rc = of_property_read_u32(dev->of_node, "qcom,wsa-bolero-codec",
+					  &wsa_bolero_codec);
+		if (!rc && wsa_bolero_codec) {
+			dev_dbg(dev, "%s: WSA macro in bolero codec present\n",
+				__func__);
+			memcpy(msm_kona_dai_links + total_links,
+			       msm_bolero_fe_dai_links,
+			       sizeof(msm_bolero_fe_dai_links));
+			total_links +=
+				ARRAY_SIZE(msm_bolero_fe_dai_links);
+		}
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_common_misc_fe_dai_links,
@@ -7987,11 +8024,17 @@ static struct snd_soc_card *populate_snd_card_dailinks(struct device *dev)
 		       sizeof(msm_common_be_dai_links));
 		total_links += ARRAY_SIZE(msm_common_be_dai_links);
 
+#ifdef OPLUS_FEATURE_PLATFORM_LITO
+		if (wsa_bolero_codec) {
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_wsa_cdc_dma_be_dai_links,
 		       sizeof(msm_wsa_cdc_dma_be_dai_links));
 		total_links +=
 			ARRAY_SIZE(msm_wsa_cdc_dma_be_dai_links);
+#ifdef OPLUS_FEATURE_PLATFORM_LITO
+		}
+#endif /* OPLUS_FEATURE_PLATFORM_LITO */
 
 		memcpy(msm_kona_dai_links + total_links,
 		       msm_rx_tx_cdc_dma_be_dai_links,
