@@ -5,6 +5,12 @@ config OPLUS_SM8250_CHARGER
 	help
 	  Enables support for the oplus charging framework
 
+config OPLUS_SM7250R_CHARGER
+	tristate "OPLUS SM7250R charger driver"
+	depends on MFD_SPMI_PMIC
+	help
+	  Enables support for the oplus charging framework
+
 config OPLUS_SHORT_C_BATT_CHECK
 	tristate "OPLUS_SHORT_C_BATT CHECK SUPPORT"
 	default n

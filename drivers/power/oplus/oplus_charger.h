@@ -137,7 +137,7 @@
 #elif defined CONFIG_OPLUS_SM7250_CHARGER
 #include "charger_ic/oplus_battery_msm7250_Q.h"
 #elif defined CONFIG_OPLUS_SM7250R_CHARGER
-#include "charger_ic/oplus_battery_msm7250_R.h"
+#include "charger_ic/oplus_battery_msm8250.h"
 #elif defined CONFIG_OPLUS_SM8350_CHARGER
 #include "charger_ic/oplus_battery_sm8350.h"
 #elif defined CONFIG_OPLUS_SM8450_CHARGER

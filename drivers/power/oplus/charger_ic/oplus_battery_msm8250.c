@@ -12911,6 +12911,9 @@ static int smb5_batt_get_prop(struct power_supply *psy, enum power_supply_proper
 #ifdef OPLUS_FEATURE_CHG_BASIC
 		if (g_oplus_chip) {
 			val->intval = g_oplus_chip->batt_rm * 1000;
+#ifdef CONFIG_ARCH_LITO
+			rc = 0;
+#endif
 		}
 #endif
 		break;
@@ -12937,6 +12940,9 @@ static int smb5_batt_get_prop(struct power_supply *psy, enum power_supply_proper
 #ifdef OPLUS_FEATURE_CHG_BASIC
 		if (g_oplus_chip) {
 			val->intval = g_oplus_chip->batt_fcc * 1000;
+#ifdef CONFIG_ARCH_LITO
+			rc = 0;
+#endif
 		}
 #endif
 		break;
@@ -15473,6 +15479,10 @@ int smbchg_get_boot_reason(void)
 
 int oplus_chg_get_shutdown_soc(void)
 {
+#ifdef CONFIG_ARCH_LITO
+	/* Nord does not use the PM8150B PON SOC backup. */
+	return 0;
+#else
 	u8 val;
 	int rc;
 
@@ -15488,10 +15498,15 @@ int oplus_chg_get_shutdown_soc(void)
 	}
 	/*chg_err("get shutdown soc = %d\n", val);*/
 	return val;
+#endif
 }
 
 int oplus_chg_backup_soc(int backup_soc)
 {
+#ifdef CONFIG_ARCH_LITO
+	/* Nord does not use the PM8150B PON SOC backup. */
+	return 0;
+#else
 	int rc;
 	struct smb_charger *chg = &g_oplus_chip->pmic_spmi.smb5_chip->chg;
 
@@ -15507,6 +15522,7 @@ int oplus_chg_backup_soc(int backup_soc)
 
 	/*chg_err("set shutdown soc = %d\n", rc);*/
 	return rc;
+#endif
 }
 
 static int smbchg_get_aicl_level_ma(void)
@@ -16427,12 +16443,14 @@ static int smb5_probe(struct platform_device *pdev)
 #ifdef OPLUS_FEATURE_CHG_BASIC
 	oplus_chg_parse_custom_dt(oplus_chip);
 	oplus_chg_parse_charger_dt(oplus_chip);
+#ifndef CONFIG_ARCH_LITO
 	/* wangjiayuan_wt, BSP.CHG.Basic, 2021/9/7, Add for fg platform for 21027 */
 	if (g_oplus_chip->external_gauge) {
 		rc = smblib_masked_write(chg, 0x4046, 0xff, 0);
 		if (rc < 0)
 			pr_err("Couldn't disable fg rc=%d\n", rc);
 	}
+#endif
 	oplus_set_flash_screen_ctrl_by_pcb_version(oplus_chip);
 	oplus_chg_2uart_pinctrl_init(oplus_chip);
 	oplus_chg_init(oplus_chip);
