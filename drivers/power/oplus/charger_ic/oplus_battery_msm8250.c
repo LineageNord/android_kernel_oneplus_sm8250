@@ -3593,11 +3593,7 @@ int smblib_get_prop_batt_iterm(struct smb_charger *chg,
 	int rc, temp;
 	u8 stat, buf[2];
 
-	/*
-	 * Currently, only ADC comparator-based termination is supported,
-	 * hence read only the threshold corresponding to ADC source.
-	 * Proceed only if CHGR_ITERM_USE_ANALOG_BIT is 0.
-	 */
+	/* Read the threshold for the configured termination source. */
 	rc = smblib_read(chg, CHGR_ENG_CHARGING_CFG_REG, &stat);
 	if (rc < 0) {
 		smblib_err(chg, "Couldn't read CHGR_ENG_CHARGING_CFG_REG rc=%d\n",
@@ -3606,7 +3602,15 @@ int smblib_get_prop_batt_iterm(struct smb_charger *chg,
 	}
 
 	if (stat & CHGR_ITERM_USE_ANALOG_BIT) {
+#ifdef CONFIG_ARCH_LITO
+		rc = smblib_read(chg, TCCC_CHARGE_CURRENT_TERMINATION_CFG_REG, &stat);
+		if (rc < 0)
+			return rc;
+		/* Match the 50 mA steps used by smbchg_term_current_set(). */
+		val->intval = (stat & TCCC_CHARGE_CURRENT_TERMINATION_SETTING_MASK) * 50000;
+#else
 		val->intval = -EINVAL;
+#endif
 		return 0;
 	}
 
@@ -3629,6 +3633,10 @@ int smblib_get_prop_batt_iterm(struct smb_charger *chg,
 					ADC_CHG_ITERM_MASK);
 
 	val->intval = temp;
+#ifdef CONFIG_ARCH_LITO
+	/* power_supply reports current in uA; the ADC conversion above is in mA. */
+	val->intval *= 1000;
+#endif
 
 	return rc;
 }
@@ -13753,12 +13761,11 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 		val->intval = get_effective_result(chg->fcc_votable);
 		break;
 #ifdef OPLUS_FEATURE_CHG_BASIC
-#ifndef CONFIG_OPLUS_SHORT_C_BATT_CHECK
-#ifndef CONFIG_OPLUS_SHORT_USERSPACE
+#if defined(CONFIG_ARCH_LITO) || \
+	(!defined(CONFIG_OPLUS_SHORT_C_BATT_CHECK) && !defined(CONFIG_OPLUS_SHORT_USERSPACE))
 	case POWER_SUPPLY_PROP_CHARGE_TERM_CURRENT:
 		rc = smblib_get_prop_batt_iterm(chg, val);
 		break;
-#endif
 #endif
 #endif
 #ifndef OPLUS_FEATURE_CHG_BASIC
