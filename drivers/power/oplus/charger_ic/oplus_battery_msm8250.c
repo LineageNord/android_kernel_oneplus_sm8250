@@ -14739,6 +14739,12 @@ static void smbchg_usbin_collapse_irq_enable(bool enable)
 	static bool collapse_en = true;
 	struct oplus_chg_chip *chip = g_oplus_chip;
 
+#ifdef CONFIG_ARCH_LITO
+	/* Initial charger updates can precede interrupt registration. */
+	if (!chip->pmic_spmi.smb5_chip->chg.irq_info[USBIN_COLLAPSE_IRQ].irq)
+		return;
+#endif
+
 	if (enable && !collapse_en) {
 		enable_irq(chip->pmic_spmi.smb5_chip->chg.irq_info[USBIN_COLLAPSE_IRQ].irq);
 	} else if (!enable && collapse_en) {
