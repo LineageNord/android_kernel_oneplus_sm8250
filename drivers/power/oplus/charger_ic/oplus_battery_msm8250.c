@@ -11967,6 +11967,12 @@ static int smb5_usb_get_prop(struct power_supply *psy, enum power_supply_propert
 		val->intval = get_client_vote(chg->usb_icl_votable, PD_VOTER);
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_MAX:
+#ifdef CONFIG_ARCH_LITO
+		if (oplus_vooc_get_fastchg_started()) {
+			val->intval = 6000000;
+			break;
+		}
+#endif
 		rc = smblib_get_prop_input_current_settled(chg, val);
 		break;
 	case POWER_SUPPLY_PROP_TYPE:
@@ -12703,12 +12709,21 @@ static int smb5_init_dc_psy(struct smb5 *chip)
  *************************/
 static enum power_supply_property ac_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
+#ifdef CONFIG_ARCH_LITO
+	POWER_SUPPLY_PROP_CURRENT_MAX,
+	POWER_SUPPLY_PROP_VOLTAGE_MAX,
+#endif
 };
 
 static int smb5_ac_get_property(struct power_supply *psy, enum power_supply_property psp,
 				union power_supply_propval *val)
 {
 	int rc = 0;
+
+#ifdef CONFIG_ARCH_LITO
+	if (psp == POWER_SUPPLY_PROP_CURRENT_MAX || psp == POWER_SUPPLY_PROP_VOLTAGE_MAX)
+		return smb5_usb_get_prop(psy, psp, val);
+#endif
 
 	rc = oplus_ac_get_property(psy, psp, val);
 
