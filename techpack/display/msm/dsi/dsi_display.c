@@ -299,7 +299,8 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	}
 #endif
 	/* Add some delay to avoid screen flash */
-	if (panel->need_power_on_backlight && bl_lvl) {
+	if (panel->need_power_on_backlight && bl_lvl &&
+	    !IS_ENABLED(CONFIG_OPLUS_EBBA_LEGACY_DISPLAY)) {
 		panel->need_power_on_backlight = false;
 		rc = dsi_display_clk_ctrl(dsi_display->dsi_clk_handle,
 					  DSI_CORE_CLK, DSI_CLK_ON);
@@ -360,6 +361,27 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	rc = dsi_panel_set_backlight(panel, (u32)bl_temp);
 	if (rc)
 		DSI_ERR("unable to set backlight\n");
+
+#ifdef CONFIG_OPLUS_EBBA_LEGACY_DISPLAY
+	if (rc >= 0 && panel->need_power_on_backlight && bl_temp) {
+		usleep_range(8000, 10000);
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_POST_ON_BACKLIGHT);
+		if (!rc) {
+			panel->need_power_on_backlight = false;
+			if (!panel->oplus_priv.esd_err_flag_enabled)
+				atomic_set(&panel->esd_pending, 0);
+			oplus_start_ffl_thread();
+		} else {
+			DSI_ERR("[%s] failed to send legacy display-on, rc=%d\n",
+				panel->name, rc);
+		}
+	}
+	if (rc < 0) {
+		dsi_display_clk_ctrl(dsi_display->dsi_clk_handle,
+				     DSI_CORE_CLK, DSI_CLK_OFF);
+		goto error;
+	}
+#endif
 
 	rc = dsi_display_clk_ctrl(dsi_display->dsi_clk_handle,
 			DSI_CORE_CLK, DSI_CLK_OFF);

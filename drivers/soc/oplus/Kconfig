@@ -13,3 +13,10 @@ source "drivers/soc/oplus/system/Kconfig"
 #ifdef OPLUS_FEATURE_THERMAL_HORAE
 source "drivers/soc/oplus/thermal/Kconfig"
 #endif /* OPLUS_FEATURE_THERMAL_HORAE */
+
+config OPLUS_EBBA_LEGACY_DISPLAY
+	bool "Use legacy OnePlus Nord CE display startup"
+	depends on ARCH_LAGOON
+	help
+	  Test the original Ebba DSI PHY LDO setting and send display-on
+	  after the first brightness write with an 8-10 ms delay.
