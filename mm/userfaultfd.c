@@ -29,7 +29,7 @@
 int mfill_atomic_install_pte(struct mm_struct *dst_mm, pmd_t *dst_pmd,
 			     struct vm_area_struct *dst_vma,
 			     unsigned long dst_addr, struct page *page,
-			     bool newly_allocated)
+			     bool newly_allocated, struct mem_cgroup *memcg)
 {
 	int ret;
 	pte_t _dst_pte, *dst_pte;
@@ -68,6 +68,10 @@ int mfill_atomic_install_pte(struct mm_struct *dst_mm, pmd_t *dst_pmd,
 		page_add_file_rmap(page, false);
 	else
 		page_add_new_anon_rmap(page, dst_vma, dst_addr, false);
+
+	/* Commit anonymous UFFDIO_COPY charges before the LRU batch can drain. */
+	if (IS_ENABLED(CONFIG_ARCH_LITO) && memcg)
+		mem_cgroup_commit_charge(page, memcg, false, false);
 
 	/*
 	 * Must happen after rmap, as mm_counter() checks mapping (via
@@ -138,12 +142,13 @@ static int mcopy_atomic_pte(struct mm_struct *dst_mm,
 		goto out_release;
 
 	ret = mfill_atomic_install_pte(dst_mm, dst_pmd, dst_vma, dst_addr,
-				       page, true);
+				       page, true, memcg);
 	if (ret) {
 		mem_cgroup_cancel_charge(page, memcg, false);
 		goto out_release;
 	}
-	mem_cgroup_commit_charge(page, memcg, false, false);
+	if (!IS_ENABLED(CONFIG_ARCH_LITO))
+		mem_cgroup_commit_charge(page, memcg, false, false);
 out:
 	return ret;
 out_release:
@@ -206,7 +211,7 @@ static int mcontinue_atomic_pte(struct mm_struct *dst_mm,
 	}
 
 	ret = mfill_atomic_install_pte(dst_mm, dst_pmd, dst_vma, dst_addr,
-				       page, false);
+				       page, false, NULL);
 	if (ret)
 		goto out_release;
 
