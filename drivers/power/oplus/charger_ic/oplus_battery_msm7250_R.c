@@ -12824,22 +12824,23 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 		val->intval = 0;
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (!g_oplus_chip)
+			return -ENODATA;
+		val->intval = g_oplus_chip->batt_rm * 1000;
+#else
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CHARGE_COUNTER, val);
-#ifdef OPLUS_FEATURE_CHG_BASIC
-		if (g_oplus_chip) {
-			val->intval = g_oplus_chip->batt_rm * 1000;
-		}
 #endif
 		break;
 	case POWER_SUPPLY_PROP_CYCLE_COUNT:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (!g_oplus_chip)
+			return -ENODATA;
+		val->intval = g_oplus_chip->batt_cc;
+#else
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CYCLE_COUNT, val);
-#ifdef OPLUS_FEATURE_CHG_BASIC
-		if (g_oplus_chip) {
-			val->intval = g_oplus_chip->batt_cc;
-			rc = 0;
-		}
 #endif
 		break;
 	case POWER_SUPPLY_PROP_RECHARGE_SOC:
@@ -12850,21 +12851,19 @@ static int smb5_batt_get_prop(struct power_supply *psy,
 		break;
 #ifdef OPLUS_FEATURE_CHG_BASIC
 	case POWER_SUPPLY_PROP_CHARGE_FULL_DESIGN:
-		if (g_oplus_chip) {
-			val->intval = oplus_gauge_get_design_capacity() * 1000 * g_oplus_chip->vbatt_num;
-		} else {
-			val->intval = -ENODATA;
-		}
+		if (!g_oplus_chip)
+			return -ENODATA;
+		val->intval = oplus_gauge_get_design_capacity() * 1000 * g_oplus_chip->vbatt_num;
 		break;
 #endif
 	case POWER_SUPPLY_PROP_CHARGE_FULL:
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (!g_oplus_chip)
+			return -ENODATA;
+		val->intval = g_oplus_chip->batt_fcc * 1000;
+#else
 		rc = smblib_get_prop_from_bms(chg,
 				POWER_SUPPLY_PROP_CHARGE_FULL, val);
-#ifdef OPLUS_FEATURE_CHG_BASIC
-		if (g_oplus_chip) {
-			val->intval = g_oplus_chip->batt_fcc * 1000;
-			rc = 0;
-		}
 #endif
 		break;
 	case POWER_SUPPLY_PROP_FORCE_RECHARGE:
