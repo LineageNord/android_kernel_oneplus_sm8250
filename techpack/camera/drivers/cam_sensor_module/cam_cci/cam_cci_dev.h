@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022-2023, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef _CAM_CCI_DEV_H_
@@ -37,7 +38,7 @@
 #define CYCLES_PER_MICRO_SEC_DEFAULT 4915
 #define CCI_MAX_DELAY 1000000
 
-#define CCI_TIMEOUT msecs_to_jiffies(1500)
+#define CCI_TIMEOUT msecs_to_jiffies(100)
 
 #define NUM_QUEUES 2
 
@@ -59,16 +60,14 @@
 #define CCI_I2C_MAX_WRITE 8192
 #define CCI_I2C_MAX_BYTE_COUNT 65535
 
-#define CCI_VERSION_1_2_9 0x10020009
-#define CCI_I2C_QUEUE_0_SIZE_V_1_2 64
-#define CCI_I2C_QUEUE_1_SIZE_V_1_2 16
-
 #define CAMX_CCI_DEV_NAME "cam-cci-driver"
 
 #define MAX_CCI 2
 
 #define PRIORITY_QUEUE (QUEUE_0)
 #define SYNC_QUEUE (QUEUE_1)
+
+#define REPORT_IDSIZE 16
 
 enum cci_i2c_sync {
 	MSM_SYNC_DISABLE,
@@ -125,7 +124,7 @@ struct cam_cci_i2c_queue_info {
 };
 
 struct cam_cci_master_info {
-	uint32_t status;
+	int32_t status;
 	atomic_t q_free[NUM_QUEUES];
 	uint8_t q_lock[NUM_QUEUES];
 	uint8_t reset_pending;
@@ -137,9 +136,8 @@ struct cam_cci_master_info {
 	struct completion report_q[NUM_QUEUES];
 	atomic_t done_pending[NUM_QUEUES];
 	spinlock_t lock_q[NUM_QUEUES];
-	spinlock_t freq_cnt;
 	struct semaphore master_sem;
-	bool is_first_req;
+	spinlock_t freq_cnt_lock;
 	uint16_t freq_ref_cnt;
 	bool is_initilized;
 };
@@ -289,6 +287,7 @@ struct cam_cci_ctrl {
 		struct cam_cci_wait_sync_cfg cci_wait_sync_cfg;
 		struct cam_cci_gpio_cfg gpio_cfg;
 	} cfg;
+	bool force_low_priority;
 };
 
 struct cci_write_async {
